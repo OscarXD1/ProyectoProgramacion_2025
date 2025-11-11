@@ -23,6 +23,7 @@ def extraerDatos():
     #DATAFRAME DE TODAS LAS FARMACIAS DEL ESTADO
     df = pd.DataFrame(data)
     df.to_csv("farmaciasEstado.csv",index=False)
+    #df.to_csv("farmaciasEstado2.csv", index=False)
 
 
     #FILTRAR POR LA COLUMNA UBICACION SOLAMENTE A FARMACIAS DE TIJUANA
@@ -32,5 +33,21 @@ def extraerDatos():
 
     #print(len(df))
     print("LISTO :)")
+
+def unirDataFrames():
+    #LEER LOS ARCHIVOS
+    df1 = pd.read_csv("farmaciasEstado.csv")
+    df2 = pd.read_csv("farmaciasEstado2.csv")
+
+    #CONCATENAR LOS DATAFRAMES
+    dfCompleto = pd.concat([df1, df2])
+    dfCompleto.to_csv("farmaciasEstadoCompleto.csv")
+
+    print("LISTO :)")
+
+
+
 if __name__ == "__main__":
-    extraerDatos()
+    #extraerDatos()
+    unirDataFrames()
+
