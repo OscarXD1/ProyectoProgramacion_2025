@@ -191,7 +191,7 @@ def recortarNombreFarmacias(dfLimpio: pd.DataFrame):
     dfLimpio["Nombre"] = dfLimpio["Nombre"].apply(limpiar)
     return dfLimpio
 
-#checo datos por ultima vez
+#checo datos por ultima vez para ver que tal estan
 def revision(dfLimpio: pd.DataFrame):
     print(dfLimpio.columns)
     print(dfLimpio.isnull().sum())
