@@ -169,8 +169,8 @@ def quitarSucursal(dfLimpio: pd.DataFrame):
 
 
 def recortarNombreFarmacias(dfLimpio: pd.DataFrame):
-    #hago una lista de nombre que quiero que se queden asi, sin nada mas o menos ya quue quiero quitar cosas como sucursal y ubicacines que solo son repetidas
-    # elegi estas porque como son cadenas grndes de farmacias hacen que haya mucha inconsistencia en la columna de nombre
+    #hago una lista de nombre que quiero que se queden asi, sin nada mas o menos ya quue quiero quitar cosas como ubicacines que solo son repetidas
+    # elegi estas porque como son cadenas grndes de farmacias hacen que haya mucha inconsistencia en la columna de nombre y tienen variaciones
     nombreNormal = [
         "FARMACIA DEL AHORRO",
         "FARMACIA SIMILARES",
