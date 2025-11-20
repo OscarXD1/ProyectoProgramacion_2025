@@ -132,6 +132,16 @@ def filtrarFarmaciasConsul(dfLimpio: pd.DataFrame):
 
     return dfLimpio
 
+
+#aqui voy a meter una reconstruccion de la columna d econsultorio porque al basarme en nombre se perdian datos
+#la reconstruire en base a la columna clase acrividad para que sea confiable la info para el analisis
+
+def rehacerConsultorio(dfLimpio: pd.DataFrame):
+    dfLimpio["Consultorio"]=dfLimpio["Clase_actividad"].str.upper().str.contains("CONSULTORIOS")
+    dfLimpio["Consultorio"]=dfLimpio["Consultorio"].map({True: "SI", False:"NO"})
+    return dfLimpio
+
+
 #hare que todas las palabras que anteriormente inclui ya no varien y que todas sean farmacia
 def estandarFarmacias(dfLimpio: pd.DataFrame):
     renombre = {
@@ -219,6 +229,8 @@ if __name__=="__main__":
     dfLimpio=limpiarColonia(dfLimpio)
     print("=====================================================")
     dfLimpio=filtrarFarmaciasConsul(dfLimpio)
+    print("=====================================================")
+    dfLimpio=rehacerConsultorio(dfLimpio)
     print("=====================================================")
     dfLimpio=estandarFarmacias(dfLimpio)
     print("=====================================================")
