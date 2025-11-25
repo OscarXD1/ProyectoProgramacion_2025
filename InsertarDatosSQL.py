@@ -1,116 +1,122 @@
 import pandas as pd
 import mysql.connector
 
-#ESTABLECER CONEXION
 
+#  CONEXIÓN A LA BASE DE DATOS
 def conectar():
     conexion = mysql.connector.connect(
         host="localhost",
         user="root",
         passwd="1234",
-        database="proyecto"
+        database="proyectoBD"
     )
-
     cursor = conexion.cursor()
-
     return cursor, conexion
 
-#LEER ARCHIVO
+
+#  LEER ARCHIVO CSV
 def leerCSV():
     df = pd.read_csv('farmaciasCompletoLimpio.csv')
     return df
 
-#FUNCION PARA INSERTAR LOS DATOS
-def obtenerOInsertar(cursor, conexion, tabla, valor):
-    #Buscar si ya existe
-    sqlSelect = f"SELECT id FROM {tabla} WHERE descripcion = %s"
+#  OBTENER O INSERTAR VALOR EN TABLAS
+def obtenerOInsertar(cursor, conexion, tabla, columna, valor):
+
+    # MAPEO DE LAS PRIMARY KEY
+    id_map = {
+        "municipio": "idMunicipio",
+        "colonia": "idColonia",
+        "tipo_vialidad": "idTipoVialidad",
+        "tipo_farmacia": "idTipoFarmacia",
+        "cantidad_trabajadores": "idCantidadTrabajadores",
+        "clase_actividad": "idClaseActividad",
+        "farmacia": "idFarmacia"
+    }
+
+    id_col = id_map[tabla]
+
+    if pd.isna(valor):
+        return None
+
+    #BUSCAR EL REGISTRO
+    sqlSelect = f"SELECT {id_col} FROM {tabla} WHERE {columna} = %s"
     cursor.execute(sqlSelect, (valor,))
     resultado = cursor.fetchone()
 
     if resultado:
         return resultado[0]
 
-    # Insertar si no existe
-    sqlInsert = f"INSERT INTO {tabla} (descripcion) VALUES (%s)"
+    # SI NO EXISTE LO INSERTA
+    sqlInsert = f"INSERT INTO {tabla} ({columna}) VALUES (%s)"
     cursor.execute(sqlInsert, (valor,))
     conexion.commit()
 
     return cursor.lastrowid
 
-#TABLA DE LONGITUD Y LATITUD POR QUE SE COMPONE DE DOS COLUMNAS
-def obtenerOInsertarLonLat(cursor, conexion, longitud, latitud):
 
-    sqlSelect = "SELECT id FROM LonLat WHERE longitud = %s AND latitud = %s"
-    cursor.execute(sqlSelect, (longitud, latitud))
-    resultado = cursor.fetchone()
-
-    if resultado:
-        return resultado[0]
-
-
-    sqlInsert = "INSERT INTO LonLat (longitud, latitud) VALUES (%s, %s)"
-    cursor.execute(sqlInsert, (longitud, latitud))
-    conexion.commit()
-
-    return cursor.lastrowid
-
-
-
+#  PROCESO PRINCIPAL
 def main():
     cursor, conexion = conectar()
+    df = leerCSV()
 
-    df=leerCSV()
+    for _, fila in df.iterrows():
+        #  TABLAS DE DIRECCIÓN (llaves foraneas)
 
-    for index, fila in df.iterrows():
-        descTipoFarmacia = obtenerOInsertar(cursor, conexion, 'tipo_farmacia' ,fila['Tipo'])
-        descConsultorio = obtenerOInsertar(cursor, conexion, 'consultorio', fila['Consultorio'])
-        descNombreFarmacia = obtenerOInsertar(cursor, conexion, 'nombre_farmacia', fila['Nombre'])
-        descClaseActividad = obtenerOInsertar(cursor, conexion, 'clase_actividad', fila['Clase_actividad'])
-        descEstrato = obtenerOInsertar(cursor, conexion, 'estrato', fila['Estrato'])
-        descCalle = obtenerOInsertar(cursor, conexion, 'calle', fila['Calle'])
-        descMunicipio = obtenerOInsertar(cursor, conexion, 'municipio', fila['Ubicacion'])
-        descTipoVialidad = obtenerOInsertar(cursor, conexion, 'tipo_vialidad', fila['Tipo_vialidad'])
+        idMunicipio = obtenerOInsertar(cursor, conexion, "municipio", "nombre", fila["Ubicacion"])
+        idColonia = obtenerOInsertar(cursor, conexion, "colonia", "nombre", fila["Colonia"])
+        idTipoVialidad = obtenerOInsertar(cursor, conexion, "tipo_vialidad", "descripcion", fila["Tipo_vialidad"])
 
-
-        # LonLat (longitud y latitud)
-        LonLat = obtenerOInsertarLonLat(cursor, conexion, fila["Longitud"], fila["Latitud"])
-
-        # Insertar domicilio
-        sqlInsertDomicilio = """
-            INSERT INTO domicilio (idCalle, idLonLat, idMunicipio, idTipoVialidad)
+        # Insertar Dirección
+        sqlInsertDireccion = """
+            INSERT INTO direccion (idMunicipio, idTipoVialidad, idColonia, Calle)
             VALUES (%s, %s, %s, %s)
         """
-        cursor.execute(sqlInsertDomicilio, (
-            descCalle,
-            LonLat,
-            descMunicipio,
-            descTipoVialidad
+        cursor.execute(sqlInsertDireccion, (
+            idMunicipio,
+            idTipoVialidad,
+            idColonia,
+            fila["Calle"]
         ))
         conexion.commit()
-        idDomicilio = cursor.lastrowid
+        idDireccion = cursor.lastrowid
 
-        # Insertar farmacia
-        sqlInsertFarmacia = """
-            INSERT INTO farmacia (
-                idNombreFarmacia, idClaseActividad, idEstrato,
-                idTipoFarmacia, idConsultorio, idDomicilio
-            )
-            VALUES (%s, %s, %s, %s, %s, %s)
+
+
+        #  TABLAS DE SUCURSAL (llaves foraneas)
+        idTipoFarmacia = obtenerOInsertar(cursor, conexion, "tipo_farmacia", "descripcion", fila["Tipo"])
+        idCantidadTrab = obtenerOInsertar(cursor, conexion, "cantidad_trabajadores", "descripcion", fila["Estrato"])
+        idClaseActividad = obtenerOInsertar(cursor, conexion, "clase_actividad", "descripcion", fila["Clase_actividad"])
+
+        # Nombre de la farmacia
+        idFarmacia = obtenerOInsertar(cursor, conexion, "farmacia", "nombre", fila["Nombre"])
+
+        # Consultorio
+        consultorio_bool = True if str(fila["Consultorio"]).lower() == "si" else False
+
+        #  INSERTAR SUCURSAL COMPLETA
+        sqlInsertSucursal = """
+            INSERT INTO sucursal 
+                (consultorio, idFarmacia, idClaseActividad, idCantidadTrabajadores, idTipoFarmacia, longitud, latitud, idDireccion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
 
-        cursor.execute(sqlInsertFarmacia, (
-            descNombreFarmacia,
-            descClaseActividad,
-            descEstrato,
-            descTipoFarmacia,
-            descConsultorio,
-            idDomicilio
+        cursor.execute(sqlInsertSucursal, (
+            consultorio_bool,
+            idFarmacia,
+            idClaseActividad,
+            idCantidadTrab,
+            idTipoFarmacia,
+            fila["Longitud"],
+            fila["Latitud"],
+            idDireccion
         ))
         conexion.commit()
+
 
     cursor.close()
     conexion.close()
+    print("LO LOGRASTE PAPU B)")
 
-    print("DATOS INSERTADOS B)")
+
 if __name__ == '__main__':
     main()
