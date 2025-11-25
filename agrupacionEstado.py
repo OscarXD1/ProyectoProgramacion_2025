@@ -4,7 +4,7 @@ import pandas as pd
 farmaciasCompletoLimpio=pd.read_csv("farmaciasCompletoLimpio.csv")
 
 #¿Cuántas farmacias hay por municipio?
-# aqui voy a agrupar por los municiopios y contar las farmacias
+# aqui voy a agrupar por los municiopios y contar las farmacias .
 def farmaciasMunicipio(farmaciasCompletoLimpio ):
     farmaciasXmunicipio=(farmaciasCompletoLimpio.groupby("Ubicacion")["Id"].count()
                      .reset_index(name="Numero_farmacias")
