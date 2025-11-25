@@ -254,3 +254,4 @@ if __name__=="__main__":
 
     dfLimpio.to_csv("farmaciasCompletoLimpio.csv", index=False)
 
+
