@@ -1,10 +1,11 @@
+
 import pandas as pd
 
-#aqui estoy leyendo el df ya limpio para poder hacer las agrpaciones
+#aqui estoy leyendo el df ya limpio para poder hacer las agrpaciones con el df ya final
 farmaciasCompletoLimpio=pd.read_csv("farmaciasCompletoLimpio.csv")
 
 #¿Cuántas farmacias hay por municipio?
-# aqui voy a agrupar por los municiopios y contar las farmacias .
+# aqui voy a agrupar por los municiopios y contar las farmacias
 def farmaciasMunicipio(farmaciasCompletoLimpio ):
     farmaciasXmunicipio=(farmaciasCompletoLimpio.groupby("Ubicacion")["Id"].count()
                      .reset_index(name="Numero_farmacias")
